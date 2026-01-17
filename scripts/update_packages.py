@@ -31,29 +31,11 @@ class PubDevScraper:
         
         return []
     
-    def get_packages_from_search(self, query):
-        """Sök efter packages via pub.dev search"""
-        url = f"https://pub.dev/packages?q={query}"
-        print(f"🔍 Searching: {url}")
-        
-        try:
-            response = self.session.get(url, timeout=10)
-            if response.status_code == 200:
-                packages = self._extract_packages_from_html(response.text)
-                if packages:
-                    print(f"✓ Found {len(packages)} packages from search")
-                    return packages
-        except Exception as e:
-            print(f"⚠️  Search failed: {e}")
-        
-        return []
-    
     def _extract_packages_from_html(self, html_content):
         """Extrahera package-namn från HTML"""
         soup = BeautifulSoup(html_content, 'html.parser')
         packages = set()
         
-        # Olika selectors för olika page layouts
         selectors = [
             ('a', {'href': lambda x: x and x.startswith('/packages/')}),
             ('h3.packages-title a', {}),
@@ -65,7 +47,6 @@ class PubDevScraper:
             for link in links:
                 href = link.get('href', '')
                 if '/packages/' in href:
-                    # Extrahera bara package-namnet
                     parts = href.split('/packages/')
                     if len(parts) > 1:
                         package_name = parts[1].split('/')[0].split('?')[0]
@@ -86,7 +67,6 @@ class PubDevScraper:
                     'package': package_name,
                     'version': data['latest']['version'],
                     'description': data['latest'].get('pubspec', {}).get('description', ''),
-                    'published': data['latest'].get('published', ''),
                 }
         except Exception as e:
             print(f"⚠️  Error fetching {package_name}: {e}")
@@ -100,18 +80,19 @@ class ReadmeGenerator:
     @staticmethod
     def generate(packages, fallback_used=False):
         """Skapa README innehåll"""
+        timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        
         lines = [
             "# 📦 GLLB-Apps Dart Packages\n",
             "My published packages on pub.dev\n",
         ]
         
         if fallback_used:
-            lines.append("*Note: Using fallback package list (scraping unavailable)*\n")
+            lines.append("⚠️ *Using fallback package list (auto-discovery unavailable)*\n")
         
         if not packages:
             lines.append("*No packages found.*\n")
         else:
-            # Sortera alfabetiskt
             packages.sort(key=lambda x: x['package'])
             
             lines.extend([
@@ -131,8 +112,8 @@ class ReadmeGenerator:
         
         lines.extend([
             "\n---",
-            f"*Last updated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC*",
-            "\n*Auto-updated daily via GitHub Actions*",
+            f"**Last updated:** `{timestamp} UTC` 🤖",
+            "\n*Auto-updated daily at 03:00 UTC via GitHub Actions*",
         ])
         
         return "\n".join(lines)
@@ -146,21 +127,12 @@ def main():
     
     scraper = PubDevScraper()
     
-    # Försök olika metoder att hitta packages
     all_package_names = []
     
-    # Metod 1: Publisher
     packages = scraper.get_packages_from_publisher('gllb-apps.github.io')
     if packages:
         all_package_names.extend(packages)
     
-    # Metod 2: Search (om publisher inte fungerade)
-    if not all_package_names:
-        packages = scraper.get_packages_from_search('publisher:gllb-apps.github.io')
-        if packages:
-            all_package_names.extend(packages)
-    
-    # Fallback: Hårdkodad lista
     fallback_used = False
     if not all_package_names:
         print("\n⚠️  Scraping failed, using fallback list...")
@@ -170,11 +142,9 @@ def main():
         ]
         fallback_used = True
     
-    # Ta bort dubbletter
     all_package_names = list(set(all_package_names))
     print(f"\n📦 Processing {len(all_package_names)} packages...")
     
-    # Hämta detaljerad info
     package_infos = []
     for name in all_package_names:
         info = scraper.get_package_info(name)
@@ -184,16 +154,14 @@ def main():
         else:
             print(f"  ✗ {name} (failed)")
     
-    # Generera README
     print(f"\n📝 Generating README...")
     readme_content = ReadmeGenerator.generate(package_infos, fallback_used)
     
-    # Skriv till fil
     readme_path = Path(__file__).parent.parent / 'README.md'
     readme_path.write_text(readme_content, encoding='utf-8')
     
     print(f"✅ Updated {len(package_infos)} packages!")
-    print(f"📄 Wrote to: {readme_path}")
+    print(f"📄 README updated with timestamp")
     print("=" * 60)
 
 
