@@ -1,4 +1,6 @@
-﻿name: package_updater
+﻿# Uppdatera scripts/pubspec.yaml
+
+name: package_updater
 description: Script to update package list from pub.dev
 version: 1.0.0
 
@@ -7,3 +9,5 @@ environment:
 
 dependencies:
   http: ^1.2.0
+  html: ^0.15.4
+  yaml: ^3.1.0

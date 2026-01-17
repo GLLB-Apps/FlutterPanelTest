@@ -12,23 +12,23 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    
     steps:
       - uses: actions/checkout@v3
       
-      - uses: dart-lang/setup-dart@v1
+      - uses: actions/setup-python@v4
         with:
-          sdk: stable
+          python-version: '3.11'
+          cache: 'pip'
       
       - name: Install dependencies
-        run: dart pub get
-        working-directory: scripts
+        run: pip install -r scripts/requirements.txt
       
-      - name: Update package list
-        run: dart run update.dart
-        working-directory: scripts
+      - name: Update packages
+        run: python scripts/update_packages.py
       
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git diff --quiet || (git add README.md && git commit -m "🤖 Auto-update packages [skip ci]" && git push)
+          git diff --quiet || (git add README.md && git commit -m "🤖 Auto-update packages" && git push)
