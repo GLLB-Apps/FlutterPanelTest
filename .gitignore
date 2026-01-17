@@ -1,0 +1,5 @@
+﻿.DS_Store
+*.log
+.dart_tool/
+scripts/.dart_tool/
+scripts/pubspec.lock
