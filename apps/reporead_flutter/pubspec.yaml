@@ -1,0 +1,33 @@
+name: reporead
+description: Desktop app for managing Dart package README files with live Markdown preview and split panels.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_markdown: ^0.7.2
+  shared_preferences: ^2.2.3
+  intl: ^0.19.0 
+  flutter_layout_grid: ^2.0.7 
+  fluent_ui: ^4.9.1
+  
+  # IDE-style panels
+  tabbed_view: ^1.20.0
+  
+  
+  # Desktop window management
+  window_manager: ^0.3.9
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+
+flutter:
+  uses-material-design: true
